@@ -1,16 +1,15 @@
-
 import 'package:sqflite/sqflite.dart';
-
+import 'package:test_app/constants/user_feilds.dart';
+import 'package:test_app/models/user_model.dart';
 import '../constants/notes_feilds.dart';
 import '../models/notes_model.dart';
 
-
-class NoteDatabase {
-  static final NoteDatabase instance = NoteDatabase._internal();
+class AppDatabase {
+  static final AppDatabase instance = AppDatabase._internal();
 
   static Database? _database;
 
-  NoteDatabase._internal();
+  AppDatabase._internal();
 
   Future<Database> get database async {
     if (_database != null) {
@@ -22,15 +21,17 @@ class NoteDatabase {
   }
 
   Future<Database> _initDatabase() async {
-    
     return await openDatabase(
       'notes.db',
       version: 1,
-      onCreate: _createDatabase,
+      onCreate: (Database db, int i) async {
+        await _createUserTable(db, i);
+        await _createNotesTable(db, i);
+      },
     );
   }
 
-  Future<void> _createDatabase(Database db, _) async {
+  Future<void> _createNotesTable(Database db, _) async {
     return await db.execute('''
         CREATE TABLE ${NoteFields.tableName} (
           ${NoteFields.id} ${NoteFields.idType},
@@ -43,10 +44,61 @@ class NoteDatabase {
       ''');
   }
 
+  Future<void> _createUserTable(Database db, _) async {
+    return await db.execute('''
+        CREATE TABLE ${UserFeilds.tableName} (
+          ${UserFeilds.id} ${UserFeilds.idType},
+          ${UserFeilds.number} ${UserFeilds.numberType},
+          ${UserFeilds.otp} ${UserFeilds.otpType}
+        )
+      ''');
+  }
+
   Future<NoteModel> create(NoteModel note) async {
     final db = await instance.database;
     final id = await db.insert(NoteFields.tableName, note.toMap());
     return note.copyWith(id: id);
+  }
+
+  Future<bool> createUser(UserModel user) async {
+    try {
+      print(user.phoneNumber);
+      final db = await instance.database;
+      // final UserModel users = await readUser(user);
+      // if (users.phoneNumber.isNotEmpty) {
+      //   return true;
+      //   //Update Otp here
+      // }
+      int result = await db.insert(UserFeilds.tableName, user.toMap());
+      print(result);
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  Future<int> updateUser(UserModel user) async {
+    final db = await instance.database;
+    return db.update(
+      UserFeilds.tableName,
+      user.toMap(),
+      where: '${UserFeilds.id} = ?',
+      whereArgs: [user.id],
+    );
+  }
+
+  Future<UserModel> readUser(UserModel user) async {
+    final db = await instance.database;
+    final query = await db.query(UserFeilds.tableName,
+        columns: UserFeilds.values,
+        where: "${UserFeilds.number} = ?",
+        whereArgs: [user.phoneNumber]);
+    if (query.isNotEmpty) {
+      print(query.first);
+      return UserModel.fromMap(query.first);
+    } else {
+      throw Exception('User ${user.phoneNumber} not found');
+    }
   }
 
   Future<NoteModel> read(int id) async {
@@ -96,4 +148,3 @@ class NoteDatabase {
     db.close();
   }
 }
-
