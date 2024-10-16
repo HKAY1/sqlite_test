@@ -1,6 +1,7 @@
 // ignore_for_file: use_build_context_synchronously
 
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:test_app/db/db.dart';
 import 'package:test_app/ui/notes.dart';
 
@@ -47,9 +48,11 @@ class _OtpScreenState extends State<OtpScreen> {
           ),
           ElevatedButton(
               onPressed: () async {
+                final instance = await SharedPreferences.getInstance();
                 final UserModel user = await AppDatabase.instance.readUser(
                     UserModel(phoneNumber: widget.phoneNumber, otp: "otp"));
                 if (otpController.text.contains(user.otp)) {
+                  await instance.setBool("isLogin", true);
                   Navigator.push(context, MaterialPageRoute(builder: (_) {
                     return NotesView(
                       user: user,

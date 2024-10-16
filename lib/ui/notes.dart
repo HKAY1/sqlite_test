@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:test_app/db/db.dart';
+import 'package:test_app/locale.dart';
 
 import '../models/notes_model.dart';
 import '../models/user_model.dart';
+import '../provider/app_locale_provider.dart';
 
 class NotesView extends StatefulWidget {
   final UserModel user;
@@ -14,7 +17,7 @@ class NotesView extends StatefulWidget {
 
 class _NotesViewState extends State<NotesView> {
   AppDatabase noteDatabase = AppDatabase.instance;
-
+  late AppLanguageProvider appLanguage;
   List<NoteModel> notes = [];
 
   @override
@@ -50,19 +53,63 @@ class _NotesViewState extends State<NotesView> {
 
   @override
   Widget build(BuildContext context) {
+    appLanguage = Provider.of<AppLanguageProvider>(context);
     return Scaffold(
       backgroundColor: Colors.black87,
       appBar: AppBar(
         backgroundColor: Colors.black87,
         automaticallyImplyLeading: false,
         title: Text(
-          "Hi ${widget.user.phoneNumber}",
-          style: TextStyle(color: Colors.white),
+          "${AppLocalizations.of(context)!.translate('textToChange')!} ${widget.user.phoneNumber}",
+          style: const TextStyle(color: Colors.white),
         ),
         actions: [
           IconButton(
             onPressed: () {},
             icon: const Icon(Icons.search),
+          ),
+          PopupMenuButton<int>(
+            color: Colors.white,
+            itemBuilder: (context) => [
+              // PopupMenuItem 1
+              const PopupMenuItem(
+                value: 1,
+                // row with 2 children
+                child: Row(
+                  children: <Widget>[
+                    Icon(
+                      Icons.abc,
+                    ),
+                    SizedBox(
+                      width: 10,
+                    ),
+                    Text("English")
+                  ],
+                ),
+              ),
+              // PopupMenuItem 2
+              const PopupMenuItem(
+                value: 2,
+                // row with two children
+                child: Row(
+                  children: [
+                    Icon(Icons.nearby_off),
+                    SizedBox(
+                      width: 10,
+                    ),
+                    Text("Hindi")
+                  ],
+                ),
+              ),
+            ],
+            elevation: 2,
+            onSelected: (value) {
+              if (value == 1) {
+                appLanguage.changeLanguage(const Locale("en"));
+              } else if (value == 2) {
+                appLanguage.changeLanguage(const Locale("hi"));
+              }
+            },
           ),
         ],
       ),

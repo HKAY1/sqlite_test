@@ -87,17 +87,30 @@ class AppDatabase {
     );
   }
 
-  Future<UserModel> readUser(UserModel user) async {
+  Future<UserModel> readUser(UserModel? user) async {
     final db = await instance.database;
     final query = await db.query(UserFeilds.tableName,
         columns: UserFeilds.values,
         where: "${UserFeilds.number} = ?",
-        whereArgs: [user.phoneNumber]);
+        whereArgs: [user!.phoneNumber]);
     if (query.isNotEmpty) {
       print(query.first);
       return UserModel.fromMap(query.first);
     } else {
       throw Exception('User ${user.phoneNumber} not found');
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> readUser1() async {
+    final db = await instance.database;
+    final query = await db.query(
+      UserFeilds.tableName,
+    );
+    if (query.isNotEmpty) {
+      print(query.first);
+      return query;
+    } else {
+      return [];
     }
   }
 
