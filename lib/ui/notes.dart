@@ -66,10 +66,14 @@ class _NotesViewState extends State<NotesView> {
         actions: [
           IconButton(
             onPressed: () {},
-            icon: const Icon(Icons.search),
+            icon: const Icon(
+              Icons.search,
+              color: Colors.white,
+            ),
           ),
           PopupMenuButton<int>(
             color: Colors.white,
+            iconColor: Colors.white,
             itemBuilder: (context) => [
               // PopupMenuItem 1
               const PopupMenuItem(

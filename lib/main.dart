@@ -48,6 +48,7 @@ class _MyAppState extends State<MyApp> {
         child: Consumer<AppLanguageProvider>(builder: (context, model, child) {
           return MaterialApp(
             title: 'SQFlite Demo',
+            debugShowCheckedModeBanner: false,
             theme: ThemeData(
               colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
               useMaterial3: true,
