@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_quill/flutter_quill.dart';
 import 'package:provider/provider.dart';
 import 'package:test_app/db/db.dart';
 import 'package:test_app/locale.dart';
+import 'package:test_app/ui/quil_test.dart';
 
+import '../constants/video_sample.dart';
 import '../models/notes_model.dart';
 import '../models/user_model.dart';
 import '../provider/app_locale_provider.dart';
@@ -112,9 +115,19 @@ class _NotesViewState extends State<NotesView> {
       ),
       body: Center(
         child: notes.isEmpty
-            ? const Text(
-                'No Notes yet',
-                style: TextStyle(color: Colors.white),
+            ? GestureDetector(
+                onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (_) => SimpleScreen(
+                              args: QuillScreenArgs(
+                                document: Document.fromJson(quillVideosSample),
+                              ),
+                            ))),
+                child: const Text(
+                  'No Notes yet',
+                  style: TextStyle(color: Colors.white),
+                ),
               )
             : ListView.builder(
                 itemCount: notes.length,
