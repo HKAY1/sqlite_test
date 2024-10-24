@@ -45,6 +45,7 @@ dependencies:
   desktop_drop: ^0.5.0
   path: ^1.9.0
   flutter_quill_extensions: ^10.8.3
+  connectivity_plus: ^6.1.0
 
 dev_dependencies:
   flutter_test:

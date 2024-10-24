@@ -3,6 +3,7 @@ import 'package:test_app/constants/user_feilds.dart';
 import 'package:test_app/models/user_model.dart';
 import '../constants/notes_feilds.dart';
 import '../models/notes_model.dart';
+import '../models/synced_notes_model.dart';
 
 class AppDatabase {
   static final AppDatabase instance = AppDatabase._internal();
@@ -27,6 +28,7 @@ class AppDatabase {
       onCreate: (Database db, int i) async {
         await _createUserTable(db, i);
         await _createNotesTable(db, i);
+        await _createSyncedNotesTable(db, i);
       },
     );
   }
@@ -39,7 +41,21 @@ class AppDatabase {
           ${NoteFields.title} ${NoteFields.textType},
           ${NoteFields.content} ${NoteFields.textType},
           ${NoteFields.isFavorite} ${NoteFields.intType},
-          ${NoteFields.createdTime} ${NoteFields.textType}
+          ${NoteFields.createdTime} ${NoteFields.textType},
+          ${NoteFields.isSynced} ${NoteFields.intType}
+        )
+      ''');
+  }
+
+  Future<void> _createSyncedNotesTable(Database db, _) async {
+    return await db.execute('''
+        CREATE TABLE ${NotesFeildSync.tableName} (
+          ${NotesFeildSync.id} ${NotesFeildSync.idType},
+          ${NotesFeildSync.number} ${NotesFeildSync.intType},
+          ${NotesFeildSync.title} ${NotesFeildSync.textType},
+          ${NotesFeildSync.content} ${NotesFeildSync.textType},
+          ${NotesFeildSync.isFavorite} ${NotesFeildSync.intType},
+          ${NotesFeildSync.createdTime} ${NotesFeildSync.textType}
         )
       ''');
   }
@@ -54,6 +70,12 @@ class AppDatabase {
       ''');
   }
 
+  Future<SyncedNotesModel> syncCreate(SyncedNotesModel note) async {
+    final db = await instance.database;
+    final id = await db.insert(NotesFeildSync.tableName, note.toMap());
+    return note.copyWith(id: id);
+  }
+
   Future<NoteModel> create(NoteModel note) async {
     final db = await instance.database;
     final id = await db.insert(NoteFields.tableName, note.toMap());
@@ -62,15 +84,14 @@ class AppDatabase {
 
   Future<bool> createUser(UserModel user) async {
     try {
-      print(user.phoneNumber);
       final db = await instance.database;
       // final UserModel users = await readUser(user);
       // if (users.phoneNumber.isNotEmpty) {
       //   return true;
       //   //Update Otp here
       // }
-      int result = await db.insert(UserFeilds.tableName, user.toMap());
-      print(result);
+      await db.insert(UserFeilds.tableName, user.toMap());
+
       return true;
     } catch (e) {
       return false;
@@ -94,7 +115,6 @@ class AppDatabase {
         where: "${UserFeilds.number} = ?",
         whereArgs: [user!.phoneNumber]);
     if (query.isNotEmpty) {
-      print(query.first);
       return UserModel.fromMap(query.first);
     } else {
       throw Exception('User ${user.phoneNumber} not found');
@@ -107,7 +127,6 @@ class AppDatabase {
       UserFeilds.tableName,
     );
     if (query.isNotEmpty) {
-      print(query.first);
       return query;
     } else {
       return [];
@@ -133,7 +152,22 @@ class AppDatabase {
   Future<List<NoteModel>> readAll() async {
     final db = await instance.database;
     const orderBy = '${NoteFields.createdTime} DESC';
-    final result = await db.query(NoteFields.tableName, orderBy: orderBy);
+    final result = await db.query(
+      NoteFields.tableName,
+      orderBy: orderBy,
+    );
+    return result.map((json) => NoteModel.fromMap(json)).toList();
+  }
+
+  Future<List<NoteModel>> readAll1(bool onlyUnsynced) async {
+    final db = await instance.database;
+    const orderBy = '${NoteFields.createdTime} DESC';
+    final result = await db.query(
+      NoteFields.tableName,
+      orderBy: orderBy,
+      where: '${NoteFields.isSynced} = ?',
+      whereArgs: [onlyUnsynced ? 0 : 1],
+    );
     return result.map((json) => NoteModel.fromMap(json)).toList();
   }
 

@@ -67,6 +67,14 @@ class _NotesViewState extends State<NotesView> {
           style: const TextStyle(color: Colors.white),
         ),
         actions: [
+          IconButton(
+              onPressed: () {
+                refreshNotes();
+              },
+              icon: const Icon(
+                Icons.refresh,
+                color: Colors.white,
+              )),
           PopupMenuButton<int>(
             color: Colors.white,
             iconColor: Colors.white,
@@ -151,6 +159,18 @@ class _NotesViewState extends State<NotesView> {
                                 style:
                                     Theme.of(context).textTheme.headlineMedium,
                               ),
+                              const SizedBox(
+                                height: 20,
+                              ),
+                              Container(
+                                height: 10,
+                                width: 10,
+                                decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: note.isSynced
+                                        ? Colors.green
+                                        : Colors.red),
+                              )
                             ],
                           ),
                         ),
