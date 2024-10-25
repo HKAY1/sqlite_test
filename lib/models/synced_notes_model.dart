@@ -37,11 +37,10 @@ class SyncedNotesModel {
 
   Map<String, dynamic> toMap() {
     return <String, dynamic>{
-      '_id': id,
       'number': number,
       'title': title,
       'content': content,
-      'is_favorite': isFavorite,
+      'is_favorite': isFavorite ? 1 : 0,
       'created_time': createdTime?.millisecondsSinceEpoch,
     };
   }

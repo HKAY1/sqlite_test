@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class AppLanguageProvider extends ChangeNotifier {
+class AppLanguageProvider extends StateNotifier<Locale> {
   Locale _appLocale = const Locale("en");
+
+  AppLanguageProvider() : super(const Locale("en"));
 
   Locale get appLocal => _appLocale;
   fetchLocale() async {
@@ -13,7 +16,7 @@ class AppLanguageProvider extends ChangeNotifier {
     }
 
     _appLocale = Locale(prefs.getString('language_code')!);
-    notifyListeners();
+
     return Null;
   }
 
@@ -31,6 +34,9 @@ class AppLanguageProvider extends ChangeNotifier {
       await prefs.setString('language_code', 'en');
       await prefs.setString('countryCode', 'US');
     }
-    notifyListeners();
+    state = _appLocale;
   }
 }
+
+final appLocalProvider = StateNotifierProvider<AppLanguageProvider, Locale>(
+    (ref) => AppLanguageProvider());

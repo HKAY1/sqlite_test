@@ -1,8 +1,7 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
 import 'package:test_app/db/db.dart';
 import 'package:test_app/models/user_model.dart';
 import 'package:test_app/service/internet_service.dart';
@@ -20,10 +19,12 @@ void main() async {
   AppLanguageProvider appLanguage = AppLanguageProvider();
   InternetConnectivity.instance.initialize();
   await appLanguage.fetchLocale();
-  runApp(MyApp(
-    instance: instance,
-    user: user.isEmpty ? null : UserModel.fromMap(user.first),
-    appLanguage: appLanguage,
+  runApp(ProviderScope(
+    child: MyApp(
+      instance: instance,
+      user: user.isEmpty ? null : UserModel.fromMap(user.first),
+      appLanguage: appLanguage,
+    ),
   ));
 }
 
@@ -45,31 +46,30 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-        create: (context) => widget.appLanguage,
-        child: Consumer<AppLanguageProvider>(builder: (context, model, child) {
-          return MaterialApp(
-            title: 'SQFlite Demo',
-            debugShowCheckedModeBanner: false,
-            theme: ThemeData(
-              colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-              useMaterial3: true,
-            ),
-            home: widget.instance.getBool("isLogin") == true
-                ? NotesView(user: widget.user!)
-                : const LoginScreen(),
-            locale: model.appLocal,
-            supportedLocales: const [
-              Locale('en', 'US'),
-              Locale('hi', 'IN'),
-            ],
-            localizationsDelegates: const [
-              AppLocalizations.delegate,
-              GlobalMaterialLocalizations.delegate,
-              GlobalCupertinoLocalizations.delegate,
-              GlobalWidgetsLocalizations.delegate
-            ],
-          );
-        }));
+    return Consumer(builder: (context, ref, child) {
+      final state = ref.watch(appLocalProvider.notifier);
+      return MaterialApp(
+        title: 'SQFlite Demo',
+        debugShowCheckedModeBanner: false,
+        theme: ThemeData(
+          colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+          useMaterial3: true,
+        ),
+        home: widget.instance.getBool("isLogin") == true
+            ? NotesView(user: widget.user!)
+            : const LoginScreen(),
+        locale: state.appLocal,
+        supportedLocales: const [
+          Locale('en', 'US'),
+          Locale('hi', 'IN'),
+        ],
+        localizationsDelegates: const [
+          AppLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate
+        ],
+      );
+    });
   }
 }

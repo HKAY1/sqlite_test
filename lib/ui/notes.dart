@@ -1,146 +1,107 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_quill/flutter_quill.dart';
-import 'package:provider/provider.dart';
+
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import 'package:test_app/db/db.dart';
 import 'package:test_app/locale.dart';
-import 'package:test_app/ui/quil_test.dart';
+import 'package:test_app/provider/notes_provider.dart';
 
-import '../constants/video_sample.dart';
 import '../models/notes_model.dart';
 import '../models/user_model.dart';
 import '../provider/app_locale_provider.dart';
 
-class NotesView extends StatefulWidget {
+class NotesView extends StatelessWidget {
   final UserModel user;
   const NotesView({super.key, required this.user});
 
-  @override
-  State<NotesView> createState() => _NotesViewState();
-}
-
-class _NotesViewState extends State<NotesView> {
-  AppDatabase noteDatabase = AppDatabase.instance;
-  late AppLanguageProvider appLanguage;
-  List<NoteModel> notes = [];
-
-  @override
-  void initState() {
-    refreshNotes();
-    super.initState();
-  }
-
-  @override
-  dispose() {
-    //close the database
-    noteDatabase.close();
-    super.dispose();
-  }
-
   ///Gets all the notes from the database and updates the state
-  refreshNotes() {
-    noteDatabase.readAll().then((value) {
-      setState(() {
-        notes = value;
-      });
-    });
-  }
 
   ///Navigates to the NoteDetailsView and refreshes the notes after the navigation
-  goToNoteDetailsView({int? id}) async {
-    await Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => NoteDetailsView(noteId: id)),
-    );
-    refreshNotes();
-  }
 
   @override
   Widget build(BuildContext context) {
-    appLanguage = Provider.of<AppLanguageProvider>(context);
+    // appLanguage = Provider.of<AppLanguageProvider>(context);
+    goToNoteDetailsView({int? id}) async {
+      await Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => NoteDetailsView(noteId: id)),
+      );
+    }
+
     return Scaffold(
       backgroundColor: Colors.black87,
       appBar: AppBar(
         backgroundColor: Colors.black87,
         automaticallyImplyLeading: false,
         title: Text(
-          "${AppLocalizations.of(context)!.translate('textToChange')!} ${widget.user.phoneNumber}",
+          "${AppLocalizations.of(context)!.translate('textToChange')!} ${user.phoneNumber}",
           style: const TextStyle(color: Colors.white),
         ),
         actions: [
           IconButton(
-              onPressed: () {
-                refreshNotes();
+              onPressed: () => NotesProvider.instance.fetchNotes(),
+              icon: const Icon(Icons.refresh)),
+          Consumer(builder: (context, ref, ch) {
+            return PopupMenuButton<int>(
+              color: Colors.white,
+              iconColor: Colors.white,
+              itemBuilder: (context) => [
+                // PopupMenuItem 1
+                const PopupMenuItem(
+                  value: 1,
+                  // row with 2 children
+                  child: Row(
+                    children: <Widget>[
+                      Icon(
+                        Icons.abc,
+                      ),
+                      SizedBox(
+                        width: 10,
+                      ),
+                      Text("English")
+                    ],
+                  ),
+                ),
+                // PopupMenuItem 2
+                const PopupMenuItem(
+                  value: 2,
+                  // row with two children
+                  child: Row(
+                    children: [
+                      Icon(Icons.nearby_off),
+                      SizedBox(
+                        width: 10,
+                      ),
+                      Text("Hindi")
+                    ],
+                  ),
+                ),
+              ],
+              elevation: 2,
+              onSelected: (value) {
+                if (value == 1) {
+                  ref
+                      .read(appLocalProvider.notifier)
+                      .changeLanguage(const Locale("en"));
+                } else if (value == 2) {
+                  ref
+                      .read(appLocalProvider.notifier)
+                      .changeLanguage(const Locale("hi"));
+                }
               },
-              icon: const Icon(
-                Icons.refresh,
-                color: Colors.white,
-              )),
-          PopupMenuButton<int>(
-            color: Colors.white,
-            iconColor: Colors.white,
-            itemBuilder: (context) => [
-              // PopupMenuItem 1
-              const PopupMenuItem(
-                value: 1,
-                // row with 2 children
-                child: Row(
-                  children: <Widget>[
-                    Icon(
-                      Icons.abc,
-                    ),
-                    SizedBox(
-                      width: 10,
-                    ),
-                    Text("English")
-                  ],
-                ),
-              ),
-              // PopupMenuItem 2
-              const PopupMenuItem(
-                value: 2,
-                // row with two children
-                child: Row(
-                  children: [
-                    Icon(Icons.nearby_off),
-                    SizedBox(
-                      width: 10,
-                    ),
-                    Text("Hindi")
-                  ],
-                ),
-              ),
-            ],
-            elevation: 2,
-            onSelected: (value) {
-              if (value == 1) {
-                appLanguage.changeLanguage(const Locale("en"));
-              } else if (value == 2) {
-                appLanguage.changeLanguage(const Locale("hi"));
-              }
-            },
-          ),
+            );
+          }),
         ],
       ),
       body: Center(
-        child: notes.isEmpty
-            ? GestureDetector(
-                onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (_) => SimpleScreen(
-                              args: QuillScreenArgs(
-                                document: Document.fromJson(quillVideosSample),
-                              ),
-                            ))),
-                child: const Text(
-                  'No Notes yet',
-                  style: TextStyle(color: Colors.white),
-                ),
-              )
-            : ListView.builder(
-                itemCount: notes.length,
+        child: Consumer(builder: (context, ref, child) {
+          final state = ref.watch(notesProvider);
+          if (state is NotesLoading) return const CircularProgressIndicator();
+          if (state is NotesFetch) {
+            return ListView.builder(
+                itemCount: state.notes.length,
                 itemBuilder: (context, index) {
-                  final note = notes[index];
+                  final note = state.notes[index];
                   return GestureDetector(
                     onTap: () => goToNoteDetailsView(id: note.id),
                     child: Padding(
@@ -177,13 +138,18 @@ class _NotesViewState extends State<NotesView> {
                       ),
                     ),
                   );
-                }),
+                });
+          }
+          return Container();
+        }),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: goToNoteDetailsView,
-        tooltip: 'Create Note',
-        child: const Icon(Icons.add),
-      ),
+      floatingActionButton: Consumer(builder: (context, ref, ch) {
+        return FloatingActionButton(
+          onPressed: () => ref.read(notesProvider.notifier).createNote(),
+          tooltip: 'Create Note',
+          child: const Icon(Icons.add),
+        );
+      }),
     );
   }
 }

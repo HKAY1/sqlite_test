@@ -1,9 +1,10 @@
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:test_app/db/db.dart';
-import 'package:test_app/models/synced_notes_model.dart';
+import 'package:test_app/provider/notes_provider.dart';
 
-class InternetConnectivity {
-  InternetConnectivity._();
+class InternetConnectivity extends StateNotifier<bool> {
+  InternetConnectivity._() : super(false);
   static final InternetConnectivity instance = InternetConnectivity._();
   bool isConnected = false;
 
@@ -18,6 +19,7 @@ class InternetConnectivity {
   Future<void> startListeningForInternetConnectivity() async {
     final List<ConnectivityResult> result =
         await _connectivity.checkConnectivity();
+    state = _isConnected(result);
     _showDialog(result);
     _connectivity.onConnectivityChanged.listen(_showDialog);
   }
@@ -26,9 +28,11 @@ class InternetConnectivity {
     if (_isConnected(result)) {
       if (_previousConnectivity == null) return;
       if (_isConnected(_previousConnectivity!)) return;
-
+      state = true;
       await syncData();
-    } else {}
+    } else {
+      state = false;
+    }
 
     _previousConnectivity = result;
   }
@@ -36,7 +40,12 @@ class InternetConnectivity {
   bool _isConnected(List<ConnectivityResult> result) {
     isConnected = result.contains(ConnectivityResult.mobile) ||
         result.contains(ConnectivityResult.wifi);
+
     return isConnected;
+  }
+
+  bool connectionState() {
+    return state;
   }
 
   Future<void> syncData() async {
@@ -44,15 +53,10 @@ class InternetConnectivity {
     AppDatabase noteDatabase = AppDatabase.instance;
     final notes = await noteDatabase.readAll1(true);
     for (int i = 0; i < notes.length; i++) {
-      final SyncedNotesModel note = SyncedNotesModel(
-          title: notes[i].title,
-          content: notes[i].content,
-          isFavorite: notes[i].isFavorite,
-          createdTime: DateTime.now(),
-          number: i);
-      await noteDatabase.syncCreate(note);
-      final newNote = notes[i].copyWith(isSynced: true);
-      await noteDatabase.update(newNote);
+      NotesProvider.instance.syncNote(notes[i]);
     }
   }
 }
+
+final internetProvider =
+    StateNotifierProvider((ref) => InternetConnectivity._());

@@ -43,9 +43,9 @@ class NoteModel {
       'number': number,
       'title': title,
       'content': content,
-      'is_favorite': isFavorite,
+      'is_favorite': isFavorite ? 1 : 0,
       'created_time': createdTime?.millisecondsSinceEpoch,
-      'is_synced': isSynced
+      'is_synced': isSynced ? 1 : 0
     };
   }
 

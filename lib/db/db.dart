@@ -72,12 +72,14 @@ class AppDatabase {
 
   Future<SyncedNotesModel> syncCreate(SyncedNotesModel note) async {
     final db = await instance.database;
+    print(note.toMap());
     final id = await db.insert(NotesFeildSync.tableName, note.toMap());
     return note.copyWith(id: id);
   }
 
   Future<NoteModel> create(NoteModel note) async {
     final db = await instance.database;
+    print(note.toMap());
     final id = await db.insert(NoteFields.tableName, note.toMap());
     return note.copyWith(id: id);
   }
