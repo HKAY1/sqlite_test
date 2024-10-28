@@ -1,5 +1,6 @@
 // ignore_for_file: use_build_context_synchronously
 
+import 'package:country_code_picker/country_code_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:test_app/db/db.dart';
 
@@ -36,17 +37,39 @@ class _LoginScreenState extends State<LoginScreen> {
           const SizedBox(
             height: 20,
           ),
-          TextField(
-            controller: phoneNumberController,
-            cursorColor: Colors.white,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-            ),
-            decoration: const InputDecoration(
-              hintText: "Mobile No.",
-            ),
+          Row(
+            children: [
+              const CountryCodePicker(
+                onChanged: print,
+                showDropDownButton: true,
+                hideMainText: false,
+                showFlag: false,
+                textStyle: TextStyle(color: Colors.white),
+                // Initial selection and favorite can be one of code ('IT') OR dial_code('+39')
+                initialSelection: 'IN',
+                favorite: ['+91', 'IN'],
+                // optional. Shows only country name and flag
+                showCountryOnly: false,
+                // optional. Shows only country name and flag when popup is closed.
+                showOnlyCountryWhenClosed: false,
+                // optional. aligns the flag and the Text left
+                alignLeft: false,
+              ),
+              Expanded(
+                child: TextField(
+                  controller: phoneNumberController,
+                  cursorColor: Colors.white,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  decoration: const InputDecoration(
+                    hintText: "Mobile No.",
+                  ),
+                ),
+              ),
+            ],
           ),
           const SizedBox(
             height: 20,

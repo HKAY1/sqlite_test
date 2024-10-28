@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:test_app/db/db.dart';
 import 'package:test_app/models/user_model.dart';
+import 'package:test_app/service/bio_auth_service.dart';
 import 'package:test_app/service/internet_service.dart';
 import 'package:test_app/ui/auth/login.dart';
 import 'package:test_app/ui/notes.dart';
@@ -18,6 +19,7 @@ void main() async {
   final user = await AppDatabase.instance.readUser1();
   AppLanguageProvider appLanguage = AppLanguageProvider();
   InternetConnectivity.instance.initialize();
+  BioAuthService.instance.initialize();
   await appLanguage.fetchLocale();
   runApp(ProviderScope(
     child: MyApp(
