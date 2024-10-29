@@ -20,6 +20,7 @@ class InternetConnectivity extends StateNotifier<bool> {
     final List<ConnectivityResult> result =
         await _connectivity.checkConnectivity();
     state = _isConnected(result);
+    if (state) syncData();
     _showDialog(result);
     _connectivity.onConnectivityChanged.listen(_showDialog);
   }

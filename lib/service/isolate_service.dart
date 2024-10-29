@@ -1,15 +1,25 @@
 import 'dart:isolate';
 
+import 'package:flutter/services.dart';
+
 class IsolateService {
   IsolateService._();
 
   static final IsolateService instance = IsolateService._();
 
-  Future<T> runIsolateProvider<T>(T Function() task) async {
+  /// Initialize the isolate by setting up the binary messenger in the background isolate.
+  void initialize() {
+    BackgroundIsolateBinaryMessenger.ensureInitialized(
+        ServicesBinding.rootIsolateToken!);
+  }
+
+  Future<T> runIsolateProvider<T>(Future<T> Function() task) async {
+    BackgroundIsolateBinaryMessenger.ensureInitialized(
+        ServicesBinding.rootIsolateToken!);
     return Isolate.run(task);
   }
 
-  Future<T> spawnIsolateProvider<T>(T Function() task) async {
+  Future<T> spawnIsolateProvider<T>(Future<T> Function() task) async {
     final resultPort = ReceivePort();
     try {
       await Isolate.spawn(
@@ -42,9 +52,15 @@ class IsolateService {
 
 Future<void> _taskToPerform(List<dynamic> args) async {
   SendPort resultPort = args[0];
-  Future task = args[1];
+  Future Function() task = args[1];
 
-  final response = await task;
-
-  Isolate.exit(resultPort, response);
+  try {
+    BackgroundIsolateBinaryMessenger.ensureInitialized(
+        ServicesBinding.rootIsolateToken!);
+    final response = await task();
+    Isolate.exit(resultPort, response);
+  } catch (e, stackTrace) {
+    // If an error occurs, pass the error and stack trace back
+    resultPort.send([e.toString(), stackTrace.toString()]);
+  }
 }

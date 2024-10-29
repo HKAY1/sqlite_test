@@ -5,7 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:test_app/db/db.dart';
 import 'package:test_app/locale.dart';
 import 'package:test_app/provider/notes_provider.dart';
-import 'package:test_app/service/bio_auth_service.dart';
+// import 'package:test_app/service/bio_auth_service.dart';
 
 import '../models/notes_model.dart';
 import '../models/user_model.dart';
@@ -22,6 +22,7 @@ class NotesView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // appLanguage = Provider.of<AppLanguageProvider>(context);
+
     goToNoteDetailsView({int? id}) async {
       await Navigator.push(
         context,
@@ -146,11 +147,12 @@ class NotesView extends StatelessWidget {
       ),
       floatingActionButton: Consumer(builder: (context, ref, ch) {
         return FloatingActionButton(
-          onPressed: () async {
-            final res = await BioAuthService.instance.authenticate();
-            print(res);
-          },
-          //ref.read(notesProvider.notifier).createNote(),
+          onPressed:
+              // () async {
+              //   final res = await BioAuthService.instance.authenticate();
+              //   print(res);
+              // },
+              () => ref.read(notesProvider.notifier).createNote(),
           tooltip: 'Create Note',
           child: const Icon(Icons.add),
         );

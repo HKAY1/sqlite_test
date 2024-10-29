@@ -35,8 +35,7 @@ class NotesProvider extends StateNotifier<NotesState> {
     );
 
     await noteDatabase.create(model);
-
-    await syncNote(model);
+    // await fetchNotes();
   }
 
   Future<void> updateNote(NoteModel note) async {

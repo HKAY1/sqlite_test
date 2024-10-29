@@ -1,16 +1,19 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:test_app/constants/user_feilds.dart';
 import 'package:test_app/models/user_model.dart';
+import 'package:test_app/provider/notes_provider.dart';
+import 'package:test_app/service/internet_service.dart';
 import '../constants/notes_feilds.dart';
 import '../models/notes_model.dart';
 import '../models/synced_notes_model.dart';
 
-class AppDatabase {
+class AppDatabase extends StateNotifier<bool> {
   static final AppDatabase instance = AppDatabase._internal();
 
   static Database? _database;
 
-  AppDatabase._internal();
+  AppDatabase._internal() : super(false);
 
   Future<Database> get database async {
     if (_database != null) {
@@ -78,7 +81,24 @@ class AppDatabase {
 
   Future<NoteModel> create(NoteModel note) async {
     final db = await instance.database;
+    state = false;
     final id = await db.insert(NoteFields.tableName, note.toMap());
+    if (!state && InternetConnectivity.instance.connectionState()) {
+      print("in syncing");
+      final SyncedNotesModel notes = SyncedNotesModel(
+          title: note.title,
+          content: note.content,
+          isFavorite: note.isFavorite,
+          createdTime: DateTime.now(),
+          number: 1);
+
+      await syncCreate(notes);
+      NoteModel newNote = note.copyWith(isSynced: true, id: id);
+      await update(newNote);
+      state = true;
+      print("syncing complete");
+    }
+    await NotesProvider.instance.fetchNotes();
     return note.copyWith(id: id);
   }
 

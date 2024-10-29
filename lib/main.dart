@@ -6,6 +6,7 @@ import 'package:test_app/db/db.dart';
 import 'package:test_app/models/user_model.dart';
 import 'package:test_app/service/bio_auth_service.dart';
 import 'package:test_app/service/internet_service.dart';
+import 'package:test_app/service/isolate_service.dart';
 import 'package:test_app/ui/auth/login.dart';
 import 'package:test_app/ui/notes.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -19,7 +20,8 @@ void main() async {
   final user = await AppDatabase.instance.readUser1();
   AppLanguageProvider appLanguage = AppLanguageProvider();
   InternetConnectivity.instance.initialize();
-  BioAuthService.instance.initialize();
+  await BioAuthService.instance.initialize();
+  IsolateService.instance.initialize();
   await appLanguage.fetchLocale();
   runApp(ProviderScope(
     child: MyApp(
